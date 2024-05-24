@@ -1,4 +1,4 @@
-const LogSource = require("../lib/log-source");
+import LogSource from "../lib/log-source";
 
 describe("Log Source Behaviors", () => {
   test("It should synchronously drain a log source", () => {

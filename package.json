@@ -13,5 +13,6 @@
     "bluebird": "^3.4.1",
     "jest": "^26.6.3",
     "lodash": "^4.13.1"
-  }
+  },
+  "type": "module"
 }

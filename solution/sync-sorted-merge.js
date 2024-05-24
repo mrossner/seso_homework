@@ -1,9 +1,12 @@
 "use strict";
+import { findAndDeleteSmallest, insertbTree} from "./marc-btree.js";
 
 // Print all entries, across all of the sources, in chronological order.
 
 /***** 
  Structure holding 'entries queued to be printed' is a binary tree
+ implementation in marc-btree.js (just some functions, not a class)
+
  enter an entry into structure
  (a) as I scan FIRST entry in each logfile to find the 'first lowest entry'
  (b) if I am scanning the file from the 'previous lowest entry' and find an
@@ -24,69 +27,7 @@
  
 
 
-module.exports = (logSources, printer) => {
-
-    /* the following three functions relate to the bTree -- an insert function, 
-       a "find and delete smallest", and the comparator
-    */
-    const compare = (entryA, entryB) => {
-        if (entryA.date > entryB.date) {
-            return 1;
-        } else if (entryA.date < entryB.date) {
-            return -1;
-        }
-        return entryA.logIndex - entryB.logIndex;
-    }
-
-    const findAndDeleteSmallest = (tree, parent = null) => {
-        let smallest;
-        if (tree === null) {
-            return { tree: null, smallest: null };
-        }
-        if (tree.left === null) {
-            smallest = tree;
-            if (parent) {
-                parent.left = tree.right;
-            } else {
-                tree = tree.right;
-            }
-            return { smallest, tree };
-        }
-        smallest =  findAndDeleteSmallest(tree.left, tree).smallest;
-        return { smallest, tree };
-    }
-    const insertbTree = (tree, entry, needCopy = true) =>  {
-        if (needCopy) {
-            entry = { ...entry, left: null, right: null }
-        }
-        if (tree === null) {
-            return entry;
-        }
-        if (compare(entry, tree) < 0) {
-            if (tree.left) {
-                insertbTree(tree.left, entry, false);
-            } else {
-                tree.left = entry;
-            }
-            return tree;
-        }
-        if (tree.right) {
-            insertbTree(tree.right, entry, false);
-        } else {
-            tree.right = entry
-        }
-        return tree;
-    }
-    
-    // for debugging only
-    const printTree = (tree) => {
-        if (tree !== null) {
-            printTree(tree.left);
-            console.log(tree.date, tree.msg, tree.logIndex);
-            printTree(tree.right);
-        }
-    }
-
+const syncSortedMerge =  (logSources, printer)=> {
     // build initial tree with first line of logsource (smallest from each source)
     // note each entry is annotated with a logIndex, so I know the source of the
     // "previous smallest entry" and can iterate through that source printing entries
@@ -122,7 +63,6 @@ module.exports = (logSources, printer) => {
             entry.logIndex = nextIndexToCheck;
             if (!smallest || (entry.date < smallest.date)) {
                 printer.print(entry);
-                //console.log(entry.date, entry.msg, entry.logIndex);
             } else {
                 break;
             }
@@ -137,3 +77,5 @@ module.exports = (logSources, printer) => {
 
     return console.log("Sync sort complete.");
 };
+
+export default syncSortedMerge;
